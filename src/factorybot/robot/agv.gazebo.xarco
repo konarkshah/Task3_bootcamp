@@ -1,0 +1,173 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:arg name="robot_name" default="agv"/>
+    <xacro:arg name="visualize_lidar2D" default="false"/>
+    <xacro:arg name="visualize_lidar3D" default="false"/>
+
+    <!-- Setting colors for parts of AGV -->
+    <gazebo reference="chassis">
+        <material>Gazebo/Orange</material>
+    </gazebo>
+    <gazebo reference="wheelL">
+        <material>Gazebo/Black</material>
+        <mu>1</mu>
+        <mu2>1</mu2>
+        <slip>0</slip>
+        <slip2>0</slip2>
+    </gazebo>
+    <gazebo reference="wheelR">
+        <material>Gazebo/Black</material>
+        <mu>1</mu>
+        <mu2>1</mu2>
+        <slip>0</slip>
+        <slip2>0</slip2>
+    </gazebo>
+    <gazebo reference="wheelC">
+        <material>Gazebo/Black</material>
+        <mu>0</mu>
+        <mu2>0</mu2>
+        <slip>0</slip>
+        <slip2>0</slip2>
+    </gazebo>
+
+
+    <!-- Differential Drive Controller -->
+    <gazebo>
+    <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
+        <ros>
+            <namespace>$(arg robot_name)</namespace>
+        </ros>
+        <update_rate>20</update_rate>
+        <left_joint>chassis_wheelL_joint</left_joint>
+        <right_joint>chassis_wheelR_joint</right_joint>
+        <wheel_separation>${chassis_y}</wheel_separation>
+        <wheel_diameter>${2*wheel_rad}</wheel_diameter>
+        <max_wheel_torque>20</max_wheel_torque>
+        <max_wheel_acceleration>0</max_wheel_acceleration>
+        <command_topic>cmd_vel</command_topic>
+        <publish_odom>true</publish_odom>
+        <publish_odom_tf>true</publish_odom_tf>
+        <publish_wheel_tf>false</publish_wheel_tf>
+        <odometry_topic>odom</odometry_topic>
+        <odometry_frame>odom</odometry_frame>
+        <robot_base_frame>agv_CoordSys</robot_base_frame>
+    </plugin>
+    </gazebo>
+    <!--
+        There exists a gazebo_ros_tricycle_drive plugin which would be better suited for AGV.
+        To DO: Since it is undocumented, figure out how to use it.
+    -->
+
+
+    <!-- 2D Lidar -->
+    <gazebo reference="lidar2D">
+        <material>Gazebo/Red</material>
+        <sensor type="ray" name="lidar2D_sensor">
+            <pose>0 0 0 0 0 0</pose>
+            <visualize>$(arg visualize_lidar2D)</visualize>
+            <update_rate>10</update_rate>
+            <ray>
+            <noise>
+                <type>gaussian</type>
+                <mean>0.0</mean>
+                <stddev>.05</stddev>
+            </noise>
+            <scan>
+                <horizontal>
+                <samples>${360*5}</samples>
+                <resolution>1</resolution>
+                <min_angle>0</min_angle>
+                <max_angle>6.283185</max_angle>
+                </horizontal>
+            </scan>
+            <range>
+                <min>1</min>
+                <max>30</max>
+                <resolution>0.02</resolution>
+            </range>
+            </ray>
+            <plugin name="lidar2D_plugin" filename="libgazebo_ros_ray_sensor.so">
+                <ros>
+                    <namespace>$(arg robot_name)</namespace>
+                    <remapping>~/out:=lidar2D/scan</remapping>
+                </ros>
+                <output_type>sensor_msgs/LaserScan</output_type>
+                <frame_name>lidar2D</frame_name>
+            </plugin>
+        </sensor>
+    </gazebo>
+
+    <!-- 3D Lidar -->
+    <gazebo reference="lidar3D">
+        <material>Gazebo/Green</material>
+        <sensor type="ray" name="lidar3D_sensor">
+            <pose>0 0 0 0 0 0</pose>
+            <visualize>$(arg visualize_lidar3D)</visualize>
+            <update_rate>10</update_rate>
+            <ray>
+            <noise>
+                <type>gaussian</type>
+                <mean>0.0</mean>
+                <stddev>.1</stddev>
+            </noise>
+            <scan>
+                <horizontal>
+                <samples>${100*5}</samples>
+                <resolution>1</resolution>
+                <min_angle>-1</min_angle>
+                <max_angle>1</max_angle>
+                </horizontal>
+                <vertical>
+                <samples>8</samples>
+                <resolution>1</resolution>
+                <min_angle>-.5</min_angle>
+                <max_angle>.5</max_angle>
+                </vertical>
+            </scan>
+            <range>
+                <min>1</min>
+                <max>30</max>
+                <resolution>0.02</resolution>
+            </range>
+            </ray>
+            <plugin name="lidar3D_plugin" filename="libgazebo_ros_ray_sensor.so">
+                <ros>
+                    <namespace>$(arg robot_name)</namespace>
+                    <remapping>~/out:=lidar3D/pointcloud2</remapping>
+                </ros>
+                <output_type>sensor_msgs/PointCloud2</output_type>
+                <frame_name>lidar3D</frame_name>
+            </plugin>
+        </sensor>
+    </gazebo>
+
+    <!-- Camera -->
+    <gazebo reference="camera">
+        <material>Gazebo/White</material>
+        <sensor type="camera" name="front_camera_sensor">
+        <update_rate>30.0</update_rate>
+        <camera name="head">
+            <horizontal_fov>1.3962634</horizontal_fov>
+            <image>
+                <width>800</width>
+                <height>800</height>
+                <format>R8G8B8</format>
+            </image>
+            <clip>
+                <near>0.02</near>
+                <far>300</far>
+            </clip>
+        </camera>
+        <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+            <ros>
+                <namespace>$(arg robot_name)</namespace>
+                <remapping>~/image_raw:=camera/rgb/image_raw</remapping>
+                <remapping>~/camera_info:=camera/rgb/camera_info</remapping>
+            </ros>
+            <camera_name>camera</camera_name>
+            <frame_name>camera</frame_name>
+        </plugin>
+        </sensor>
+    </gazebo>
+
+</robot>
