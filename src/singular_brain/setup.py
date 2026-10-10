@@ -25,6 +25,7 @@ setup(
     entry_points={
         'console_scripts': [
             'perception_node = singular_brain.perception_node:main',
+            'database_node = singular_brain.database_node:main',
         ],
     },
 )

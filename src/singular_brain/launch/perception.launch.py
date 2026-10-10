@@ -29,7 +29,20 @@ def generate_launch_description():
         ]
     )
 
+    database_node = Node(
+        package='singular_brain',
+        executable='database_node',
+        name='database_node',
+        namespace=LaunchConfiguration('namespace'),
+        output='screen',
+        parameters=[
+            {'global_frame': 'odom'},
+            {'db_path': 'spatial_memory.db'}
+        ]
+    )
+
     return LaunchDescription([
         namespace_arg,
-        perception_node
+        perception_node,
+        database_node
     ])

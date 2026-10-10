@@ -11,7 +11,6 @@ find_package(ament_cmake REQUIRED)
 # Install directories for simulation assets
 install(
   DIRECTORY 
-    launch 
     robot 
     warehouse
   DESTINATION share/${PROJECT_NAME}
